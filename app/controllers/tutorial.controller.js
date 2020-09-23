@@ -35,7 +35,19 @@ exports.create = (req, res) => {
 
 // Retrieve all tutorials from the databse.
 export.findAll = (req, res) => {
-    const title = req.query.title
+    const title = req.query.title;
+    let condition = title ? { title: { [Op.iLike]: `%${title}%` } } : null;
+
+    Tutorial.findAll({ where: condition })
+      .then(data => {
+        req.send(data);
+      })
+      .catch(err => {
+        req.status(500).send({
+          message:
+            err.message || "Some error while retrieving tutorials."
+        })
+      })
 };
 
 // Find a single Tutorial by id in the request
@@ -97,10 +109,31 @@ export.delete = (req, res) => {
 
 // Delete all Tutorials from the database.
 export.deleteAll = (req, res) => {
-  
+  Tutorial.destroy({
+    where: {},
+    truncate: false
+  })
+     .then(nums => {
+       req.send({ message: `${nums} Tutorials were deleted success`})
+     })
+     .catch(err => {
+       req.status(500).send({
+         message:
+           err.message || "Some error occured while removed tutorials."
+       })
+     })
 };
 
 // Find all published Tutorials
 export.findAllPublished = (req, res) => {
-
+  Tutorial.findAll({ where: { published:true } })
+    .then(data => {
+      req.send(data);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occured while retrieving tutorials published."
+      })
+    })
 };
